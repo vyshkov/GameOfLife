@@ -1,17 +1,14 @@
 package tk.vovanok.gameoflife.core;
 
 import java.awt.Color;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Cell {
 
     private int liveStatus;
     private Color cellColour;
     private Color beforeColour;
-
-    private int colorLive = 0;
-
-    Random rand = new Random();
+    private int colorLive;
 
     public Cell() {
     }
@@ -19,6 +16,11 @@ public class Cell {
     public Cell(Cell c) {
         this.liveStatus = c.getLiveStatus();
         this.cellColour = c.getCellColour();
+    }
+
+    static Color randomColor() {
+        var rnd = ThreadLocalRandom.current();
+        return new Color(rnd.nextInt(255), rnd.nextInt(255), rnd.nextInt(255));
     }
 
     public int getLiveStatus() {
@@ -30,7 +32,6 @@ public class Cell {
     }
 
     public Color getCellColour() {
-
         if (liveStatus == 0) {
             return null;
         }
@@ -38,7 +39,6 @@ public class Cell {
     }
 
     void setCellColour(Color cellColour) {
-
         if (this.cellColour != null) {
             this.beforeColour = this.cellColour;
         }
@@ -61,16 +61,15 @@ public class Cell {
 
     public void random() {
         this.liveStatus = 1;
-        this.cellColour = new Color(Math.abs(rand.nextInt(255)), Math.abs(rand
-                .nextInt(255)), Math.abs(rand.nextInt(255)));
+        this.cellColour = randomColor();
     }
 
     void updateTimeColorLive() {
-        if (getColorLive() < 5) {
-            setColorLive(getColorLive() + 1);
+        if (colorLive < 5) {
+            colorLive++;
         } else {
             this.beforeColour = null;
-            setColorLive(0);
+            colorLive = 0;
         }
     }
 

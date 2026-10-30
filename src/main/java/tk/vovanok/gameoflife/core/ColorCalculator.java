@@ -1,162 +1,72 @@
 package tk.vovanok.gameoflife.core;
+
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 public class ColorCalculator {
 
-	Field gameField;
-	List<ColorCell> tempColCells;
-	List<ColorCell> tempColCellsBefore;
-	Random rand;
+    // Order matters: when colours tie, the one met first wins.
+    private static final int[][] NEIGHBOUR_OFFSETS = {
+        {-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, 1}, {1, 0}, {1, -1}
+    };
 
-	ColorCalculator(Field gameField) {
-		this.gameField = gameField;
-		tempColCells=Collections.synchronizedList(new ArrayList<ColorCell>());
-		tempColCellsBefore=Collections.synchronizedList(new ArrayList<ColorCell>());
-		rand=new Random();
-	
-	}
-	
-	public void calculateColors(){
-		
-		for (int i = 0; i < gameField.sizeX; i++) {
-			for (int j = 0; j < gameField.sizeY; j++) {
-				if(gameField.getCellInstance(i, j).getLiveStatus()==0) {gameField.getCellInstance(i, j).setCellColour(null); }
-				else if(gameField.getCellInstance(i, j).getLiveStatus()==1 && gameField.getCellInstance(i, j).getCellColour()!=null) continue;
-				else setColor(i, j);
-			}
-		}
-		
-	}
+    private final Field gameField;
 
-	void setColor(int x, int y) {
+    ColorCalculator(Field gameField) {
+        this.gameField = gameField;
+    }
 
-		loadNearbyCells(x, y);
-		loadBeforeNearbyCells(x, y);
+    public void calculateColors() {
+        for (int i = 0; i < gameField.sizeX; i++) {
+            for (int j = 0; j < gameField.sizeY; j++) {
+                Cell cell = gameField.getCellInstance(i, j);
+                if (cell.getLiveStatus() == 0) {
+                    cell.setCellColour(null);
+                } else if (cell.getLiveStatus() != 1 || cell.getCellColour() == null) {
+                    setColor(i, j);
+                }
+            }
+        }
+    }
 
-		if (gameField.getCellInstance(x, y).getCellColour() != null)
-			return;
+    void setColor(int x, int y) {
+        Cell cell = gameField.getCellInstance(x, y);
+        if (cell.getCellColour() != null) {
+            return;
+        }
 
-		if (isAlone(tempColCells)) {
+        var nearby = countColours(x, y, Cell::getCellColour);
+        if (!nearby.isEmpty()) {
+            cell.setCellColour(mostCommon(nearby));
+            return;
+        }
 
-			if (isAlone(tempColCellsBefore)) {
+        var nearbyBefore = countColours(x, y, Cell::getBeforeColour);
+        cell.setCellColour(nearbyBefore.isEmpty() ? Cell.randomColor() : mostCommon(nearbyBefore));
+    }
 
-				gameField.getCellInstance(x, y).setCellColour(
-						new Color(Math.abs(rand.nextInt(255)), Math.abs(rand
-								.nextInt(255)), Math.abs(rand.nextInt(255))));
-			}
+    private Map<Color, Integer> countColours(int x, int y, Function<Cell, Color> colourOf) {
+        var counts = new LinkedHashMap<Color, Integer>();
+        for (int[] offset : NEIGHBOUR_OFFSETS) {
+            Color colour = colourOf.apply(gameField.getCellInstance(x + offset[0], y + offset[1]));
+            if (colour != null) {
+                counts.merge(colour, 1, Integer::sum);
+            }
+        }
+        return counts;
+    }
 
-			else
-				gameField.getCellInstance(x, y).setCellColour(
-						getMax(tempColCellsBefore));
-
-			return;
-		}
-
-		gameField.getCellInstance(x, y).setCellColour(getMax(tempColCells));
-
-	}
-
-	boolean isAlone(List<ColorCell> tempColCells){
-		
-		if(tempColCells.size()==0) return true;
-		else return false;
-	}
-	
-	void addColor(ColorCell col,List<ColorCell> tempColCells){
-		for(int i=0;i<tempColCells.size();i++){
-			if(tempColCells.get(i).getCol()!=null && col.getCol()!=null && tempColCells.get(i).getCol().equals(col.getCol())){ tempColCells.get(i).inc(); return;}
-		}
-		if(col.getCol()!=null) tempColCells.add(col);
-	}
-	
-	void loadNearbyCells(int x, int y) {
-		
-		tempColCells.clear();
-		
-		addColor(new ColorCell(gameField.getCellInstance(x - 1, y-1)
-				.getCellColour()),tempColCells);
-		addColor(new ColorCell(gameField.getCellInstance(x - 1, y).getCellColour()),tempColCells);
-		addColor(new ColorCell(gameField.getCellInstance(x - 1, y+1)
-				.getCellColour()),tempColCells);
-		addColor(new ColorCell(gameField.getCellInstance(x, y - 1)
-				.getCellColour()),tempColCells);
-		addColor(new ColorCell(gameField.getCellInstance(x, y + 1)
-				.getCellColour()),tempColCells);
-		addColor(new ColorCell(gameField.getCellInstance(x+1, y + 1)
-				.getCellColour()),tempColCells);
-		addColor(new ColorCell(gameField.getCellInstance(x+1, y).getCellColour()),tempColCells);
-		addColor(new ColorCell(gameField.getCellInstance(x+1, y - 1)
-				.getCellColour()),tempColCells);
-	}
-	
-	void loadBeforeNearbyCells(int x, int y) {
-		
-		tempColCellsBefore.clear();
-		
-		addColor(new ColorCell(gameField.getCellInstance(x - 1, y-1)
-				.getBeforeColour()),tempColCellsBefore);
-		addColor(new ColorCell(gameField.getCellInstance(x - 1, y).getBeforeColour()),tempColCellsBefore);
-		addColor(new ColorCell(gameField.getCellInstance(x - 1, y+1)
-				.getBeforeColour()),tempColCellsBefore);
-		addColor(new ColorCell(gameField.getCellInstance(x, y - 1)
-				.getBeforeColour()),tempColCellsBefore);
-		addColor(new ColorCell(gameField.getCellInstance(x, y + 1)
-				.getBeforeColour()),tempColCellsBefore);
-		addColor(new ColorCell(gameField.getCellInstance(x+1, y + 1)
-				.getBeforeColour()),tempColCellsBefore);
-		addColor(new ColorCell(gameField.getCellInstance(x+1, y).getBeforeColour()),tempColCellsBefore);
-		addColor(new ColorCell(gameField.getCellInstance(x+1, y - 1)
-				.getBeforeColour()),tempColCellsBefore);
-	}
-
-	Color getMax(List<ColorCell> tempColCells) {
-
-		ColorCell temp = tempColCells.get(0);
-
-		for (ColorCell cc : tempColCells) {
-			if (cc.getCount() > temp.getCount())
-				temp = cc;
-		}
-
-		return temp.getCol();
-
-	}
-}
-
-class ColorCell {
-
-	private Color col;
-	int count;
-
-	int getCount(){
-		return count;
-	}
-	
-	void inc(){
-		count++;
-	}
-	
-	public ColorCell(Color col) {
-		count = 0;
-		this.setCol(col);
-	}
-
-	public Color getCol() {
-		return col;
-	}
-
-	void setCol(Color col) {
-		this.col = col;
-	}
-	
-	@Override
-	public String toString() {
-	return col.toString()+" x="+count;
-	}
-	
-
+    private static Color mostCommon(Map<Color, Integer> counts) {
+        Color best = null;
+        int bestCount = 0;
+        for (var entry : counts.entrySet()) {
+            if (entry.getValue() > bestCount) {
+                best = entry.getKey();
+                bestCount = entry.getValue();
+            }
+        }
+        return best;
+    }
 }

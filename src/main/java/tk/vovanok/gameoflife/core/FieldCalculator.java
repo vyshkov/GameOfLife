@@ -1,51 +1,51 @@
 package tk.vovanok.gameoflife.core;
-import java.util.Random;
 
-import tk.vovanok.gameoflife.rules.*;
+import java.util.concurrent.ThreadLocalRandom;
+
+import tk.vovanok.gameoflife.rules.ClassicLife;
+import tk.vovanok.gameoflife.rules.Coagulations;
+import tk.vovanok.gameoflife.rules.Gnarl;
+import tk.vovanok.gameoflife.rules.LifeRule;
+import tk.vovanok.gameoflife.rules.Maze;
 
 public class FieldCalculator {
-	
-	public static final int DIE=0;
-	public static final int ALIVE=1;
-	public static final int WILL_ALIVE=2;
-	public static final int WILL_DIE=3;
-	
-	public static final int RULE_CLASSIC=0;
-	public static final int RULE_GNARL=1;
-	public static final int RULE_MAZE = 2;
-	public static final int RULE_COAGULATIONS = 3;
-        
-	public Field gameField;
-	Field gameBeforeOneStep;
-	LifeRule rule;
-	ColorCalculator colCalc;
-	
-	
-	public FieldCalculator(int x, int y) {
-		rule = new ClassicLife();
-		this.gameField=new Field(x,y);
-		this.gameBeforeOneStep = new Field(x,y);
-		colCalc = new ColorCalculator(gameField);
-	}
-	
-    int calcNeighbors(int x,int y){
-		
+
+    public static final int DIE = 0;
+    public static final int ALIVE = 1;
+    public static final int WILL_ALIVE = 2;
+    public static final int WILL_DIE = 3;
+
+    public static final int RULE_CLASSIC = 0;
+    public static final int RULE_GNARL = 1;
+    public static final int RULE_MAZE = 2;
+    public static final int RULE_COAGULATIONS = 3;
+
+    public final Field gameField;
+    private final ColorCalculator colCalc;
+    private LifeRule rule = new ClassicLife();
+
+    public FieldCalculator(int x, int y) {
+        gameField = new Field(x, y);
+        colCalc = new ColorCalculator(gameField);
+    }
+
+    private boolean isOccupied(int x, int y) {
+        int status = gameField.getCell(x, y);
+        return status == ALIVE || status == WILL_DIE;
+    }
+
+    int calcNeighbors(int x, int y) {
         int count = 0;
-
-        if(gameField.getCell(x-1, y-1)==ALIVE||gameField.getCell(x-1, y-1)==WILL_DIE) count++;
-        if(gameField.getCell(x-1, y)==ALIVE ||gameField.getCell(x-1, y)==WILL_DIE) count++;
-        if(gameField.getCell(x-1, y+1)==ALIVE|| gameField.getCell(x-1, y+1)==WILL_DIE) count++;
-
-        if(gameField.getCell(x, y-1)==ALIVE ||gameField.getCell(x, y-1)==WILL_DIE) count++;
-        if(gameField.getCell(x, y+1)==ALIVE|| gameField.getCell(x, y+1)==WILL_DIE) count++;
-
-        if(gameField.getCell(x+1, y)==ALIVE ||gameField.getCell(x+1, y)==WILL_DIE) count++;
-        if(gameField.getCell(x+1, y+1)==ALIVE|| gameField.getCell(x+1, y+1)==WILL_DIE) count++;
-        if(gameField.getCell(x+1, y-1)==ALIVE|| gameField.getCell(x+1, y-1)==WILL_DIE) count++;
-
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+                if ((dx != 0 || dy != 0) && isOccupied(x + dx, y + dy)) {
+                    count++;
+                }
+            }
+        }
         return count;
     }
-	
+
     void estimate() {
         for (int i = 0; i < gameField.sizeX; i++) {
             for (int j = 0; j < gameField.sizeY; j++) {
@@ -65,7 +65,7 @@ public class FieldCalculator {
             }
         }
     }
-	
+
     public void calcCols() {
         colCalc.calculateColors();
     }
@@ -107,27 +107,24 @@ public class FieldCalculator {
     }
 
     public void reverseGameArrayValue(int x, int y) {
-
         if (gameField.getCell(x, y) == ALIVE) {
             gameField.clearCell(x, y);
         } else {
             gameField.setCell(x, y, ALIVE);
-        };
-
+        }
     }
-    
-    public void erase(int x, int y, int size){
-        for(int i = 0; i < size; i++){
-            for(int j = 0; j < size; j++){
+
+    public void erase(int x, int y, int size) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 gameField.clearCell(x + i - (size / 2), y + j - (size / 2));
             }
         }
-            
     }
 
     public void randomize() {
 
-        Random r = new Random();
+        var r = ThreadLocalRandom.current();
 
         for (int i = 0; i < gameField.sizeX; i++) {
             for (int j = 0; j < gameField.sizeY; j++) {
@@ -152,31 +149,17 @@ public class FieldCalculator {
 
     }
 
-    public void setRule(int ruleClassic) {
-
-        switch (ruleClassic) {
-
-            case RULE_CLASSIC:
-                rule = new ClassicLife();
-                break;
-            case RULE_GNARL:
-                rule = new Gnarl();
-                break;
-            case RULE_MAZE:
-                rule = new Maze();
-                break;
-            case RULE_COAGULATIONS:
-                rule = new Coagulations();
-                break;
-        }
-
+    public void setRule(int ruleId) {
+        rule = switch (ruleId) {
+            case RULE_CLASSIC -> new ClassicLife();
+            case RULE_GNARL -> new Gnarl();
+            case RULE_MAZE -> new Maze();
+            case RULE_COAGULATIONS -> new Coagulations();
+            default -> rule;
+        };
     }
 
     public boolean isAlive(int x, int y) {
         return gameField.getCell(x, y) == ALIVE;
     }
-    
-    
-
 }
-

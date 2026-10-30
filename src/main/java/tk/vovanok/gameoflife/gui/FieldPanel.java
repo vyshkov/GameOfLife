@@ -17,9 +17,9 @@ public class FieldPanel extends JPanel {
 
     private Graphics2D g2d;
 
-    private int delta;
-    private int width;
-    private int height;
+    private final int delta;
+    private final int width;
+    private final int height;
     
     int cursorX;
     int cursorY;
@@ -28,7 +28,7 @@ public class FieldPanel extends JPanel {
     
     int eraserWidth = 9;
 
-    FieldCalculator fCalc;
+    final FieldCalculator fCalc;
 
     FieldPanel(int x, int y) {
         delta = 10;
@@ -53,7 +53,7 @@ public class FieldPanel extends JPanel {
     }
     
     private void drawBorder() {
-        g2d.setColor(Color.blue);
+        g2d.setColor(Color.BLUE);
         g2d.drawRect(0, 0, width * delta, height * delta);
 
     }
@@ -118,26 +118,28 @@ public class FieldPanel extends JPanel {
         repaint();
     }
 
-    public void setRule(int ruleClassic) {
-        fCalc.setRule(ruleClassic);
+    public void setRule(int ruleId) {
+        fCalc.setRule(ruleId);
     }
 
     private void drawCursor() {
         Color def = g2d.getColor();
-        if(!eraser){
+        if (!eraser) {
             g2d.setColor(Color.WHITE);
-            g2d.drawRect(cursorX*delta , cursorY*delta , delta, delta);
+            g2d.drawRect(cursorX * delta, cursorY * delta, delta, delta);
         } else {
             g2d.setColor(Color.RED);
-            g2d.drawRect(cursorX*delta - (eraserWidth / 2 )* delta , cursorY*delta - (eraserWidth  / 2)* delta , delta*eraserWidth, delta*eraserWidth);
+            int half = eraserWidth / 2;
+            g2d.drawRect((cursorX - half) * delta, (cursorY - half) * delta,
+                    delta * eraserWidth, delta * eraserWidth);
         }
 
         g2d.setColor(def);
     }
 
-    public void updateCursorPosition(int x, int y){
-        cursorX = x/delta;
-        cursorY = y/delta;
+    public void updateCursorPosition(int x, int y) {
+        cursorX = x / delta;
+        cursorY = y / delta;
     }
 
     public boolean isEraser() {

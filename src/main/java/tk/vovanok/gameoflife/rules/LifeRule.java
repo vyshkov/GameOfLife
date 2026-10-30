@@ -1,7 +1,8 @@
 package tk.vovanok.gameoflife.rules;
 
 public interface LifeRule {
-	boolean willDie(int x);
-	boolean willAlive(int x);
+    boolean willDie(int neighbors);
+
+    boolean willAlive(int neighbors);
 }
 

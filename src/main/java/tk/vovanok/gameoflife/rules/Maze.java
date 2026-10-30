@@ -1,17 +1,14 @@
 package tk.vovanok.gameoflife.rules;
 
-public class Maze implements LifeRule {
+public final class Maze implements LifeRule {
 
-	@Override
-	public boolean willDie(int x) {
-		if(x<1 || x>5) return true;
-		else return false;
-	}
+    @Override
+    public boolean willDie(int neighbors) {
+        return neighbors < 1 || neighbors > 5;
+    }
 
-	@Override
-	public boolean willAlive(int x) {
-		if(x==3) return true;
-		else return false;
-	}
-
+    @Override
+    public boolean willAlive(int neighbors) {
+        return neighbors == 3;
+    }
 }

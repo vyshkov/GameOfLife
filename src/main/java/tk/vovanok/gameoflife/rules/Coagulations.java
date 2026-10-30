@@ -1,17 +1,20 @@
 package tk.vovanok.gameoflife.rules;
 
-public class Coagulations implements LifeRule {
+public final class Coagulations implements LifeRule {
 
-	@Override
-	public boolean willDie(int x) {
-		if(!(x==2 || x==3 || x==5|| x==6 || x==7|| x==8)) return true;
-		else return false;
-	}
+    @Override
+    public boolean willDie(int neighbors) {
+        return switch (neighbors) {
+            case 2, 3, 5, 6, 7, 8 -> false;
+            default -> true;
+        };
+    }
 
-	@Override
-	public boolean willAlive(int x) {
-		if(x==3||x==7||x==8) return true;
-		else return false;
-	}
-
+    @Override
+    public boolean willAlive(int neighbors) {
+        return switch (neighbors) {
+            case 3, 7, 8 -> true;
+            default -> false;
+        };
+    }
 }

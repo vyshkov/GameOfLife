@@ -1,17 +1,14 @@
 package tk.vovanok.gameoflife.rules;
 
-public class Gnarl implements LifeRule {
+public final class Gnarl implements LifeRule {
 
-	@Override
-	public boolean willDie(int x) {
-		if(x!=1) return true;
-		else return false;
-	}
+    @Override
+    public boolean willDie(int neighbors) {
+        return neighbors != 1;
+    }
 
-	@Override
-	public boolean willAlive(int x) {
-		if(x==1) return true;
-		else return false;
-	}
-
+    @Override
+    public boolean willAlive(int neighbors) {
+        return neighbors == 1;
+    }
 }

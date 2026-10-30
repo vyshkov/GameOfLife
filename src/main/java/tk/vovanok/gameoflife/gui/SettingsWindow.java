@@ -86,7 +86,7 @@ public class SettingsWindow extends JDialog {
                 panel.add(lblColorOfCells);
             }
             {
-                JComboBox comboBox = new JComboBox();
+                JComboBox<String> comboBox = new JComboBox<>();
                 panel.add(comboBox);
             }
         }
