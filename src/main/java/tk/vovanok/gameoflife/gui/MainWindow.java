@@ -31,7 +31,12 @@ public class MainWindow extends JFrame {
     private final MouseAdapter fieldMouseHandler = new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
-            gamePanel.reverseGameArrayValue(e.getX() / 10, e.getY() / 10);
+            int x = gamePanel.cellX(e.getX());
+            int y = gamePanel.cellY(e.getY());
+            if (!gamePanel.isInGrid(x, y)) {
+                return;
+            }
+            gamePanel.reverseGameArrayValue(x, y);
             gamePanel.fCalc.calcCols();
             gamePanel.repaint();
         }
@@ -43,19 +48,21 @@ public class MainWindow extends JFrame {
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            int x = e.getX();
-            int y = e.getY();
-            gamePanel.updateCursorPosition(x, y);
+            gamePanel.updateCursorPosition(e.getX(), e.getY());
+            int x = gamePanel.cellX(e.getX());
+            int y = gamePanel.cellY(e.getY());
 
             if (SwingUtilities.isLeftMouseButton(e)) {
-                if (gamePanel.fCalc.isAlive(x / 10, y / 10)) {
+                if (!gamePanel.isInGrid(x, y) || gamePanel.fCalc.isAlive(x, y)) {
                     return;
                 }
-                gamePanel.reverseGameArrayValue(x / 10, y / 10);
+                gamePanel.reverseGameArrayValue(x, y);
                 gamePanel.fCalc.calcCols();
             } else {
                 gamePanel.setEraser(true);
-                gamePanel.fCalc.erase(x / 10, y / 10, 9);
+                if (gamePanel.isInGrid(x, y)) {
+                    gamePanel.fCalc.erase(x, y, gamePanel.eraserWidth);
+                }
             }
             gamePanel.repaint();
         }
@@ -100,7 +107,6 @@ public class MainWindow extends JFrame {
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         contentPane.setLayout(new BorderLayout(0, 0));
         setContentPane(contentPane);
-        setResizable(false);
 
         gamePanel = new FieldPanel(100, 80);
         gamePanel.addMouseListener(fieldMouseHandler);
@@ -152,6 +158,7 @@ public class MainWindow extends JFrame {
         ruleSelector.setToolTipText("Choose rule");
         controls.add(ruleSelector);
         pack();
+        setMinimumSize(getMinimumSize());
 
         timer = new Timer(300, e -> step());
 
